@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>APEX LIFE V2 | ELITE</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #BA7517;
+            --accent-soft: rgba(186, 117, 23, 0.15);
+            --career-color: #3b82f6;
+            --health-color: #10b981;
+            --mental-color: #a855f7;
+            --personal-color: #f59e0b;
+        }
+        body {
+            background: #050505;
+            color: #e8e5db;
+            font-family: 'Inter', sans-serif;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+        }
+        .glass-inset {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+        }
+        .nav-btn.active {
+            color: var(--accent);
+            background: var(--accent-soft);
+            box-shadow: 0 0 20px rgba(186, 117, 23, 0.1);
+        }
+        .day-btn.active {
+            background: var(--accent);
+            color: white;
+            font-weight: 900;
+            transform: scale(1.05);
+        }
+        #main-scroll {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+            padding-bottom: 120px;
+        }
+        #main-scroll::-webkit-scrollbar { display: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content:not(.hidden) { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .hidden { display: none !important; }
+
+        /* Multi-Goal Wizard Styles */
+        #wizard-overlay {
+            position: fixed;
+            inset: 0;
+            background: #050505;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            padding: 32px;
+        }
+        .wizard-step { display: none; }
+        .wizard-step.active { display: flex; flex-direction: column; height: 100%; animation: fadeIn 0.5s ease-out; }
+        
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--glass-border);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .goal-chip {
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.2s;
+        }
+        .goal-chip.active { border-color: var(--accent); background: var(--accent-soft); }
+    </style>
+</head>
+<body class="p-5 pt-8">
+
+    <!-- GLOBAL LOADING OVERLAY -->
+    <div id="global-loading" class="loading-overlay hidden">
+        <div class="text-center">
+            <div class="spinner mx-auto mb-4"></div>
+            <p id="loading-text" class="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">Processing Protocol...</p>
+        </div>
+    </div>
+
+    <!-- ONBOARDING WIZARD -->
+    <div id="wizard-overlay" class="hidden">
+        <div class="mb-10">
+            <h1 class="text-4xl font-black tracking-tighter italic">APEX <span class="text-[#BA7517]">V2</span></h1>
+            <p class="text-[10px] text-gray-500 font-mono tracking-[0.5em] uppercase mt-3">Elite Initialization</p>
+        </div>
+
+        <!-- Step 1: The Brain -->
+        <div id="step-1" class="wizard-step active">
+            <div class="glass-card p-8 mb-8 border-t-2 border-[#BA7517]">
+                <h3 class="text-sm font-black uppercase tracking-widest mb-6">01 // THE BRAIN</h3>
+                <p class="text-[11px] text-gray-400 mb-6 leading-relaxed">Personalized planning requires an <span class="text-[#BA7517] font-bold text-xs">OpenRouter API Key</span>. This ensures your data remains on-device while the AI optimizes your schedule.</p>
+                <input id="wiz-api-key" type="password" placeholder="sk-or-v1-..." class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-xs outline-none focus:border-[#BA7517] shadow-inner font-mono">
+                <div class="mt-6 p-4 glass-inset text-[10px] text-gray-500 italic flex gap-3">
+                    <span class="text-[#BA7517]">ℹ</span>
+                    <span>Skipping will load the Universal Elite Template. You can add a key later in Setup.</span>
+                </div>
+            </div>
+            <div class="mt-auto flex gap-4">
+                <button onclick="App.wizard.next(2)" class="flex-1 bg-[#BA7517] p-5 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl">NEXT PHASE</button>
+                <button onclick="App.wizard.skipAI()" class="px-6 border border-white/10 rounded-2xl text-[10px] font-bold uppercase text-gray-600">SKIP</button>
+            </div>
+        </div>
+
+        <!-- Step 2: The Vessel -->
+        <div id="step-2" class="wizard-step">
+            <div class="glass-card p-8 mb-8 border-t-2 border-blue-500">
+                <h3 class="text-sm font-black uppercase tracking-widest mb-8">02 // THE VESSEL</h3>
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-[9px] text-gray-600 uppercase mb-2 block font-bold tracking-widest">Full Identity</label>
+                        <input id="wiz-name" type="text" placeholder="e.g. Ishan" class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-blue-500 uppercase font-bold">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] text-gray-600 uppercase mb-2 block font-bold tracking-widest">Age</label>
+                            <input id="wiz-age" type="number" class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-gray-600 uppercase mb-2 block font-bold tracking-widest">Weight (kg)</label>
+                            <input id="wiz-weight" type="number" class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-600 uppercase mb-2 block font-bold tracking-widest">Constraints / Injuries</label>
+                        <textarea id="wiz-constraints" placeholder="e.g. Left shoulder clicking, 9-5 work block" class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-blue-500 h-24 resize-none leading-relaxed"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-auto flex gap-4">
+                <button onclick="App.wizard.next(3)" class="w-full bg-blue-600 p-5 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl">NEXT PHASE</button>
+                <button onclick="App.wizard.next(1)" class="px-6 border border-white/10 rounded-2xl text-[10px] font-bold uppercase text-gray-600">BACK</button>
+            </div>
+        </div>
+
+        <!-- Step 3: The Mission (Multi-Goal) -->
+        <div id="step-3" class="wizard-step">
+            <div class="glass-card p-8 mb-8 border-t-2 border-emerald-500">
+                <h3 class="text-sm font-black uppercase tracking-widest mb-6">03 // THE MISSION</h3>
+                <div id="wiz-goal-container" class="space-y-4 overflow-y-auto max-h-[400px] pr-2 no-scrollbar">
+                    <!-- Dynamic Goal Inputs -->
+                    <div class="p-5 glass-inset space-y-3">
+                        <select class="wiz-goal-type w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-emerald-400 outline-none">
+                            <option value="career">Career / Academic</option>
+                            <option value="physical">Physical / Sports</option>
+                            <option value="mental">Mental Health</option>
+                            <option value="personal">Personal Goal</option>
+                        </select>
+                        <input class="wiz-goal-title w-full bg-black/20 border border-white/5 p-3 rounded-lg text-xs outline-none placeholder:text-gray-700" placeholder="Target Objective...">
+                    </div>
+                </div>
+                <button onclick="App.wizard.addGoalRow()" class="w-full mt-4 p-3 border border-dashed border-white/10 rounded-xl text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-emerald-500">+ ADD OBJECTIVE</button>
+            </div>
+            <div class="mt-auto flex gap-4">
+                <button onclick="App.wizard.finish()" class="w-full bg-emerald-600 p-5 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl">ACTIVATE PROTOCOL</button>
+                <button onclick="App.wizard.next(2)" class="px-6 border border-white/10 rounded-2xl text-[10px] font-bold uppercase text-gray-600">BACK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP HEADER -->
+    <header class="flex justify-between items-start mb-8 px-2 shrink-0">
+        <div>
+            <h1 class="text-3xl font-black tracking-tighter italic leading-none">APEX <span class="text-[#BA7517]">V2</span></h1>
+            <p class="text-[9px] text-gray-500 font-mono tracking-[0.4em] uppercase mt-2">Privacy-First Engine</p>
+        </div>
+        <div class="text-right">
+            <div id="user-display" class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1.5 underline decoration-[#BA7517]/40 underline-offset-4">UNINITIALIZED</div>
+            <div class="flex items-center gap-2 justify-end">
+                <div id="live-hr" class="text-[11px] font-mono text-red-500/90 font-black"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TAB BAR -->
+    <nav class="flex gap-1.5 p-1.5 bg-white/5 rounded-3xl mb-8 overflow-x-auto no-scrollbar shrink-0 shadow-inner">
+        <button onclick="App.setTab('home')" data-tab="home" class="nav-btn flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Daily</button>
+        <button onclick="App.setTab('health')" data-tab="health" class="nav-btn flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Health</button>
+        <button onclick="App.setTab('career')" data-tab="career" class="nav-btn flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Mission</button>
+        <button onclick="App.setTab('coach')" data-tab="coach" class="nav-btn flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Coach</button>
+        <button onclick="App.setTab('setup')" data-tab="setup" class="nav-btn flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">System</button>
+    </nav>
+
+    <!-- DAY SELECTOR -->
+    <div id="day-bar" class="flex gap-2.5 mb-8 overflow-x-auto no-scrollbar shrink-0 pb-1">
+        <button onclick="App.setDay(0)" class="day-btn shrink-0 w-12 h-12 rounded-2xl bg-white/5 text-[11px] font-black font-mono">SUN</button>
+        <button onclick="App.setDay(1)" class="day-btn shrink-0 w-12 h-12 rounded-2xl bg-white/5 text-[11px] font-black font-mono">MON</button>
+        <button onclick="App.setDay(2)" class="day-btn shrink-0 w-12 h-12 rounded-2xl bg-white/5 text-[11px] font-black font-mono">TUE</button>
+        <button onclick="App.setDay(3)" class="day-btn shrink-0 w-12 h-12 rounded-2xl bg-white/5 text-[11px] font-black font-mono">WED</button>
+        <button onclick="App.setDay(4)" class="day-btn shrink-0 w-12 h-12 rounded-2xl bg-white/5 text-[11px] font-black font-mono">THU</button>
+        <button onclick="App.setDay(5)" class="day-btn shrink-0 w-12 h-12 rounded-2xl bg-white/5 text-[11px] font-black font-mono">FRI</button>
+        <button onclick="App.setDay(6)" class="day-btn shrink-0 w-12 h-12 rounded-2xl bg-white/5 text-[11px] font-black font-mono">SAT</button>
+    </div>
+
+    <!-- MAIN SCROLLABLE CONTENT -->
+    <main id="main-scroll">
+        
+        <!-- HOME TAB: PROTOCOL -->
+        <section id="tab-home" class="tab-content">
+            <!-- Weekly Generator Card -->
+            <div id="gen-plan-alert" class="glass-card p-8 mb-10 border border-[#BA7517]/40 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <h3 class="text-xs font-black uppercase tracking-[0.3em] text-[#BA7517] mb-3">Initialize Weekly Protocol</h3>
+                <p class="text-[11px] text-gray-500 mb-6 leading-relaxed">Optimize your performance. Add any constraints (e.g., 'cycling Tuesday', 'exam Friday 9am') then generate your elite 7-day schedule.</p>
+                <textarea id="protocol-constraints" placeholder="Add specific events or modifications..." class="w-full bg-black/40 border border-white/5 p-4 rounded-2xl text-[11px] outline-none focus:border-[#BA7517] mb-5 h-20 resize-none"></textarea>
+                <button onclick="App.generateWeeklyProtocol()" class="w-full bg-[#BA7517] p-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(186,117,23,0.3)] hover:scale-[1.02] transition-transform">GENERATE 7-DAY PROTOCOL</button>
+            </div>
+
+            <!-- Dashboard Scores -->
+            <div class="grid grid-cols-2 gap-5 mb-10">
+                <div class="glass-card p-6 flex flex-col items-center justify-center aspect-square text-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <p class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-4">Mission Rank</p>
+                    <h2 id="dash-career-score" class="text-5xl font-black text-blue-500 italic tracking-tighter">0%</h2>
+                </div>
+                <div class="glass-card p-6 flex flex-col items-center justify-center aspect-square text-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-emerald-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <p class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-4">Health Rank</p>
+                    <h2 id="dash-health-score" class="text-5xl font-black text-emerald-500 italic tracking-tighter">0%</h2>
+                </div>
+            </div>
+
+            <div id="task-list" class="space-y-4 mb-12">
+                <!-- Tasks injected here -->
+            </div>
+
+            <div class="glass-card p-6 bg-white/[0.01]">
+                <h3 class="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-5">Manual Task Entry</h3>
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <input id="new-task-time" type="time" class="bg-black/30 border border-white/10 p-4 rounded-2xl text-xs outline-none focus:border-[#BA7517] w-32 font-mono">
+                        <input id="new-task-label" type="text" placeholder="Protocol Label..." class="flex-1 bg-black/30 border border-white/10 p-4 rounded-2xl text-xs outline-none focus:border-[#BA7517] font-bold">
+                    </div>
+                    <div class="flex gap-3">
+                        <select id="new-task-type" class="flex-1 bg-black/30 border border-white/10 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-[#BA7517]">
+                            <option value="routine">Routine</option>
+                            <option value="workout">Workout</option>
+                            <option value="academic">Mission/Career</option>
+                            <option value="nutrition">Nutrition</option>
+                            <option value="mental">Mental</option>
+                        </select>
+                        <button onclick="App.addNewTask(document.getElementById('new-task-label').value, document.getElementById('new-task-type').value, document.getElementById('new-task-time').value)" class="bg-[#BA7517] px-8 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">ADD</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HEALTH TAB: WORKOUT & SYNC -->
+        <section id="tab-health" class="tab-content hidden">
+            <!-- Personalized Workout Header -->
+            <div class="glass-card p-8 mb-8 border-l-4 border-[#BA7517] shadow-xl">
+                <div class="flex justify-between items-start mb-4">
+                    <h2 id="workout-name" class="text-2xl font-black tracking-tighter uppercase italic">RECOVERY FLOW</h2>
+                    <span id="workout-intensity" class="text-[9px] font-black bg-[#BA7517] text-black px-2 py-0.5 rounded uppercase">MODERATE</span>
+                </div>
+                <p id="workout-note" class="text-[12px] text-gray-400 leading-relaxed mb-6 italic">Optimization required via Weekly Generation.</p>
+                <div id="exercise-list" class="space-y-3">
+                    <!-- Exercise details go here -->
+                </div>
+            </div>
+
+            <!-- Wearable Ecosystem -->
+            <div class="glass-card p-8 mb-8">
+                <h3 class="text-xs font-black uppercase tracking-[0.3em] mb-8 text-gray-500">Wearable Ecosystem</h3>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <button onclick="ApexIntegrations.initiateOAuth('polar')" class="p-5 glass-inset text-[10px] font-black tracking-widest text-emerald-500 hover:border-emerald-500 transition-all uppercase">POLAR</button>
+                    <button onclick="ApexIntegrations.initiateOAuth('garmin')" class="p-5 glass-inset text-[10px] font-black tracking-widest text-blue-500 hover:border-blue-500 transition-all uppercase">GARMIN</button>
+                    <button onclick="ApexIntegrations.initiateOAuth('coros')" class="p-5 glass-inset text-[10px] font-black tracking-widest text-orange-500 hover:border-orange-500 transition-all uppercase">COROS</button>
+                    <button onclick="ApexIntegrations.initiateOAuth('whoop')" class="p-5 glass-inset text-[10px] font-black tracking-widest text-red-500 hover:border-red-500 transition-all uppercase">WHOOP</button>
+                </div>
+                <button onclick="ApexIntegrations.connectHeartRate()" class="w-full p-5 glass-inset text-[11px] font-black tracking-[0.2em] text-gray-400 border border-white/5 hover:bg-white/5 transition-all uppercase underline decoration-[#BA7517] underline-offset-8">LINK LIVE HR SENSOR</button>
+            </div>
+
+            <!-- Advanced Manual Logging -->
+            <div class="glass-card p-8 shadow-2xl">
+                <h3 class="text-xs font-black uppercase tracking-[0.3em] mb-8 text-gray-500">Elite Bio-Markers</h3>
+                <div class="space-y-6">
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                            <span>Sleep Quality</span>
+                            <span id="val-sleep" class="text-emerald-500">5/10</span>
+                        </div>
+                        <input type="range" min="1" max="10" step="1" value="5" class="w-full accent-emerald-500 h-1.5 bg-white/5 rounded-full appearance-none cursor-pointer" oninput="document.getElementById('val-sleep').innerText = this.value+'/10'" onchange="App.logMetric('sleep', this.value)">
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                            <span>Mental Sharpness</span>
+                            <span id="val-mood" class="text-blue-500">5/10</span>
+                        </div>
+                        <input type="range" min="1" max="10" step="1" value="5" class="w-full accent-blue-500 h-1.5 bg-white/5 rounded-full appearance-none cursor-pointer" oninput="document.getElementById('val-mood').innerText = this.value+'/10'" onchange="App.logMetric('mood', this.value)">
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                            <span>Physical Readiness</span>
+                            <span id="val-recovery" class="text-orange-500">5/10</span>
+                        </div>
+                        <input type="range" min="1" max="10" step="1" value="5" class="w-full accent-orange-500 h-1.5 bg-white/5 rounded-full appearance-none cursor-pointer" oninput="document.getElementById('val-recovery').innerText = this.value+'/10'" onchange="App.logMetric('recovery', this.value)">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CAREER TAB: MISSION CONTROL -->
+        <section id="tab-career" class="tab-content hidden">
+            <div id="goal-list" class="space-y-5"></div>
+            
+            <div class="mt-10 glass-card p-6 border-dashed border-white/10 text-center group" onclick="App.setTab('setup')">
+                <span class="text-[11px] font-black text-gray-600 group-hover:text-[#BA7517] transition-colors cursor-pointer tracking-widest uppercase">+ OPTIMIZE MISSION TARGETS</span>
+            </div>
+        </section>
+
+        <!-- COACH TAB: AI INTERFACE -->
+        <section id="tab-coach" class="tab-content hidden flex flex-col h-[calc(100dvh-220px)]">
+            <div class="flex justify-between items-center mb-6 px-2">
+                <h3 class="text-[11px] text-gray-600 font-black uppercase tracking-[0.3em]">AI Tactical Coach</h3>
+                <button onclick="App.clearChat()" class="text-[9px] font-black text-gray-700 uppercase border border-white/5 px-3 py-1.5 rounded-xl hover:bg-red-500/5 hover:text-red-500 transition-all">Clear Memory</button>
+            </div>
+            <div id="chat-box" class="flex-1 space-y-5 mb-8 pr-2 overflow-y-auto no-scrollbar pb-10">
+                <!-- AI Messages -->
+            </div>
+            <div class="sticky bottom-0 bg-[#050505]/95 backdrop-blur-xl pt-4 shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
+                <div class="relative">
+                    <input id="chat-input" type="text" placeholder="Command protocol..." class="w-full bg-white/[0.03] border border-white/10 rounded-2xl pl-6 pr-24 py-5 text-xs font-bold focus:outline-none focus:border-[#BA7517] transition-all shadow-2xl">
+                    <button onclick="App.sendCoachMessage(document.getElementById('chat-input').value)" class="absolute right-2.5 top-2.5 bottom-2.5 bg-[#BA7517] px-6 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-transform">SEND</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SETUP TAB: SYSTEM CONTROLS -->
+        <section id="tab-setup" class="tab-content hidden space-y-8">
+            <!-- API Security -->
+            <div class="glass-card p-8">
+                <h3 class="text-xs font-black uppercase tracking-[0.3em] text-gray-500 mb-8 italic">// SECURITY_PROTOCOL</h3>
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-[9px] text-gray-600 uppercase mb-3 block font-black tracking-widest">OpenRouter AI Key</label>
+                        <div class="flex gap-3">
+                            <input id="setup-api-key" type="password" placeholder="••••••••••••••••" class="flex-1 bg-black/40 border border-white/10 p-4 rounded-2xl text-xs outline-none focus:border-[#BA7517] font-mono">
+                            <button onclick="App.saveApiKeyFromSetup()" class="bg-white/5 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#BA7517]/20 transition-all">SECURE</button>
+                        </div>
+                    </div>
+                    <div class="pt-6 border-t border-white/5">
+                        <div class="flex justify-between items-center mb-5">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-gray-400">Data Vaporization</label>
+                            <span id="retention-val" class="text-[11px] text-[#BA7517] font-black font-mono px-3 py-1.5 rounded-xl bg-white/5">30 DAYS</span>
+                        </div>
+                        <input id="retention-slider" type="range" min="7" max="90" step="1" value="30" class="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-[#BA7517]">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Mission Control -->
+            <div class="glass-card p-8">
+                <h3 class="text-xs font-black uppercase tracking-[0.3em] text-gray-500 mb-8 italic">// MISSION_TARGETS</h3>
+                <div id="setup-goal-list" class="space-y-4 mb-6">
+                    <!-- Current goals with delete buttons -->
+                </div>
+                <div class="p-6 glass-inset space-y-4">
+                    <select id="new-goal-type" class="w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-emerald-400 outline-none">
+                        <option value="career">Career / Academic</option>
+                        <option value="physical">Physical / Sports</option>
+                        <option value="mental">Mental Health</option>
+                        <option value="personal">Personal Goal</option>
+                    </select>
+                    <div class="flex gap-3">
+                        <input id="new-goal-title" class="flex-1 bg-black/20 border border-white/10 p-4 rounded-xl text-xs outline-none font-bold" placeholder="Objective Title...">
+                        <button onclick="App.addNewGoal()" class="bg-[#BA7517] px-6 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl">ADD</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wearables & Integrations -->
+            <div class="glass-card p-8">
+                 <h3 class="text-xs font-black uppercase tracking-[0.3em] text-gray-500 mb-8 italic">// EXTERNAL_INTEGRATIONS</h3>
+                 <div class="space-y-4">
+                    <button onclick="ApexIntegrations.initiateOAuth('google')" class="w-full p-5 glass-inset text-[11px] font-black tracking-widest text-gray-400 hover:text-white transition-all text-left uppercase">+ Link Google Calendar</button>
+                 </div>
+            </div>
+
+            <!-- System Wipe -->
+            <div class="p-4">
+                <button onclick="App.wipeData()" class="w-full p-6 border-2 border-red-900/30 text-red-500 rounded-3xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all shadow-[0_0_30px_rgba(239,68,68,0.1)]">TERMINATE ALL DATA</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LOAD ENGINES -->
+    <script src="db.js"></script>
+    <script src="integrations.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
